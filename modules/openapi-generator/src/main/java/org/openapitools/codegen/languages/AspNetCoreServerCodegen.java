@@ -83,6 +83,7 @@ public class AspNetCoreServerCodegen extends AbstractCSharpCodegen {
     private boolean isLibrary = false;
     private boolean useFrameworkReference = false;
     private boolean useNewtonsoft = true;
+	private boolean useAbstractController = false;
     private boolean useDefaultRouting = true;
     private String newtonsoftVersion = "3.0.0";
 
@@ -121,9 +122,19 @@ public class AspNetCoreServerCodegen extends AbstractCSharpCodegen {
         );
 
         outputFolder = "generated-code" + File.separator + getName();
+		
+		addSwitch("separateControllerAbstract", 
+			"Use abstract controller base class in different folder", 
+			useAbstractController);
 
         modelTemplateFiles.put("model.mustache", ".cs");
-        apiTemplateFiles.put("controller.mustache", ".cs");
+
+		if(!useAbstractController) {
+			apiTemplateFiles.put("controller.mustache", ".cs");
+		} else {
+			apiTemplateFiles.put("controllerAbs.mustache", ".cs");
+			apiTemplateFiles.put("controllerImp.mustache", ".cs");
+		}
 
         embeddedTemplateDir = templateDir = "aspnetcore/3.0";
 
@@ -248,7 +259,7 @@ public class AspNetCoreServerCodegen extends AbstractCSharpCodegen {
         addOption(NEWTONSOFT_VERSION,
                 "Version for Microsoft.AspNetCore.Mvc.NewtonsoftJson for ASP.NET Core 3.0+",
                 newtonsoftVersion);
-
+				
         addSwitch(USE_DEFAULT_ROUTING,
                 "Use default routing for the ASP.NET Core version.",
                 useDefaultRouting);
@@ -337,6 +348,10 @@ public class AspNetCoreServerCodegen extends AbstractCSharpCodegen {
         } else {
             newtonsoftVersion = (String) additionalProperties.get(NEWTONSOFT_VERSION);
         }
+		
+		if( additionalProperties.containsKey("separateControllerAbstract") ) {
+			useAbstractController = (boolean) additionalProperties.get("separateControllerAbstract");
+		}
 
         // Check for the modifiers etc.
         // The order of the checks is important.
